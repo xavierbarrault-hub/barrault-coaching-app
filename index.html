@@ -449,7 +449,28 @@ let SHARED_DOC_REF = null;
       renderDashboard();
     }
 
+    onAuthStateChanged(auth, (user) => {
+  const loginScreen = document.getElementById('login-screen');
+  if (user) {
+    currentUser = user;
+    SHARED_DOC_REF = doc(db, 'users', user.uid);
+    if (loginScreen) loginScreen.style.display = 'none';
+    document.getElementById('btn-logout').style.display = 'inline-block';
     startApp();
+  } else {
+    currentUser = null;
+    if (loginScreen) loginScreen.style.display = 'flex';
+    document.getElementById('btn-logout').style.display = 'none';
+  }
+});
+
+document.getElementById('btn-google-login').addEventListener('click', () => {
+  signInWithPopup(auth, provider).catch(e => console.error('[Barrault] Erreur connexion :', e.message));
+});
+
+document.getElementById('btn-logout').addEventListener('click', () => {
+  signOut(auth);
+});
 
     // === GESTION DES DONNÉES ===
     let data = {
