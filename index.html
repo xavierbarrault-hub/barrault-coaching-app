@@ -423,7 +423,10 @@
 
     const firebaseApp = initializeApp(firebaseConfig);
     const db = getFirestore(firebaseApp);
-    const SHARED_DOC_REF = doc(db, 'app', 'shared-data');
+    const auth = getAuth(firebaseApp);
+const provider = new GoogleAuthProvider();
+let currentUser = null;
+let SHARED_DOC_REF = null;
 
     async function loadDataFromFirestore(){
       try{
