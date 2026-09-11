@@ -89,17 +89,8 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 </head>
 <body>
-  <div id="login-screen" style="position:fixed;inset:0;background:#0f172a;display:flex;align-items:center;justify-content:center;z-index:5000;">
-  <div style="background:#fff;border-radius:24px;padding:40px;text-align:center;max-width:360px;">
-    <div style="font-size:22px;font-weight:700;margin-bottom:8px;">Barrault Coaching</div>
-    <p style="color:#6b7280;margin-bottom:24px;">Connecte-toi pour accéder à tes données, sur tous tes appareils.</p>
-    <button id="btn-google-login" style="width:100%;padding:14px;border-radius:999px;border:1px solid #ddd;background:#fff;font-weight:600;cursor:pointer;">
-      Se connecter avec Google
-    </button>
-  </div>
-</div>
   <div class="app-shell">
-    <button id="btn-logout" class="ghost-btn" style="display:none;">Déconnexion</button><header class="topbar"><div class="brand"><div class="logo" aria-hidden="true">BC</div><div class="brand-copy"><strong>Barrault Coaching</strong><small>Coaching sportif · Espace coach</small></div></div><div class="coach-pill">Interface coach premium</div></header>
+    <header class="topbar"><div class="brand"><div class="logo" aria-hidden="true">BC</div><div class="brand-copy"><strong>Barrault Coaching</strong><small>Coaching sportif Â· Espace coach</small></div></div><div class="coach-pill">Interface coach premium</div></header>
     <div class="quick-nav-wrap"><nav class="quick-nav" aria-label="Navigation rapide"><a class="quick-link active" data-section="aujourdhui">Aujourd'hui</a><a class="quick-link" data-section="rendezvous">Rendez-vous</a><a class="quick-link" data-section="clients">Clients</a><a class="quick-link" data-section="programmes">Programmes</a></nav></div>
     <div class="grid">
       <main class="content">
@@ -120,7 +111,7 @@
 
   <!-- PWA Install Prompt -->
   <div id="install-prompt" class="install-prompt hidden">
-    <p>📲 Installe l'app pour un accès rapide !</p>
+    <p>ðŸ“² Installe l'app pour un accÃ¨s rapide !</p>
     <div style="display:flex;gap:8px">
       <button class="btn-dismiss" id="btn-dismiss-install">Plus tard</button>
       <button class="btn-install" id="btn-install">Installer</button>
@@ -365,7 +356,7 @@
     </div>
   </div>
 
-  <!-- Modal Édition Fiche -->
+  <!-- Modal Ã‰dition Fiche -->
   <div id="modal-edit-fiche" class="modal-overlay" hidden>
     <div class="modal-content" role="dialog" aria-modal="true" style="max-width:680px">
       <div class="modal-header"><h3>Modifier la fiche</h3><button class="ghost-btn" id="btn-close-edit-fiche" type="button">&times;</button></div>
@@ -416,98 +407,62 @@
   </div>
 
   <script type="module">
-  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-  import { getFirestore, doc, getDoc, setDoc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
-  import { getAuth, GoogleAuthProvider, signInWithPopup, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+    import { getFirestore, doc, getDoc, setDoc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
-  const firebaseConfig = {
-    apiKey: "AIzaSyCr6qVlCSuJLH4_8UVIFauT0Nb1Ywbb84o",
-    authDomain: "barrault-coaching.firebaseapp.com",
-    projectId: "barrault-coaching",
-    storageBucket: "barrault-coaching.firebasestorage.app",
-    messagingSenderId: "996102278981",
-    appId: "1:996102278981:web:a03d85d0b18da4ff9a782c",
-    measurementId: "G-8YMHJZ8K02"
-  };
+    const firebaseConfig = {
+      apiKey: "AIzaSyCr6qVlCSuJLH4_8UVIFauT0Nb1Ywbb84o",
+      authDomain: "barrault-coaching.firebaseapp.com",
+      projectId: "barrault-coaching",
+      storageBucket: "barrault-coaching.firebasestorage.app",
+      messagingSenderId: "996102278981",
+      appId: "1:996102278981:web:a03d85d0b18da4ff9a782c",
+      measurementId: "G-8YMHJZ8K02"
+    };
 
-  const firebaseApp = initializeApp(firebaseConfig);
-  const db = getFirestore(firebaseApp);
-  const auth = getAuth(firebaseApp);
-  const provider = new GoogleAuthProvider();
+    const firebaseApp = initializeApp(firebaseConfig);
+    const db = getFirestore(firebaseApp);
+    const SHARED_DOC_REF = doc(db, 'app', 'shared-data');
 
-  let currentUser = null;
-  let userDocRef = null;
-
-  let data = {
-    clients: [],
-    rendezvous: [],
-    programmes: []
-  };
-
-  async function loadDataFromFirestore(){
-    try{
-      const snap = await getDoc(userDocRef);
-      if(snap.exists()){ data = snap.data(); } else { await saveData(); }
-    }catch(e){ console.error('[Barrault] Erreur de chargement Firestore :', e.code, e.message); }
-  }
-
-  async function saveData(){
-    if(!userDocRef) return;
-    try{ await setDoc(userDocRef, data); }catch(e){ console.error('[Barrault] Erreur de sauvegarde Firestore :', e.code, e.message); }
-  }
-
-  async function startApp(){
-    await loadDataFromFirestore();
-    showSection('aujourdhui');
-    renderRdv();
-    renderClients();
-    renderProgrammes();
-    updateStats();
-    renderDashboard();
-  }
-
-  document.getElementById('btn-google-login').addEventListener('click', async () => {
-    try{
-      await signInWithPopup(auth, provider);
-    }catch(e){ console.error('[Barrault] Erreur de connexion :', e.code, e.message); alert('Connexion impossible : ' + e.message); }
-  });
-
-  document.getElementById('btn-logout').addEventListener('click', async () => {
-    await signOut(auth);
-  });
-
-  onAuthStateChanged(auth, async (user) => {
-    const loginScreen = document.getElementById('login-screen');
-    const logoutBtn = document.getElementById('btn-logout');
-    if(user){
-      currentUser = user;
-      userDocRef = doc(db, 'users', user.uid, 'app', 'shared-data');
-      loginScreen.style.display = 'none';
-      logoutBtn.style.display = 'inline-flex';
-      await startApp();
-    } else {
-      currentUser = null;
-      userDocRef = null;
-      loginScreen.style.display = 'flex';
-      logoutBtn.style.display = 'none';
+    async function loadDataFromFirestore(){
+      try{
+        const snap = await getDoc(SHARED_DOC_REF);
+        if(snap.exists()){ data = snap.data(); } else { await saveData(); }
+      }catch(e){ console.error('[Barrault] Erreur de chargement Firestore :', e.code, e.message); }
     }
-  });
 
-  // === NAVIGATION ===
-  const sections = ['aujourdhui','rendezvous','clients','programmes'];
-  function showSection(id){
-    sections.forEach(sec=>{
-      const el = document.getElementById(sec);
-      if(el) el.style.display = (sec===id)?'block':'none';
-    });
-    document.querySelectorAll('.quick-link, .side-link').forEach(link=>{
-      link.classList.toggle('active', link.dataset.section===id);
-    });
-    if(id==='aujourdhui') updateStats();
-  }
-  document.querySelectorAll('.quick-link, .side-link').forEach(link=>{
-    link.addEventListener('click', ()=>showSection(link.dataset.section));
-  });
+    async function saveData(){
+      try{ await setDoc(SHARED_DOC_REF, data); }catch(e){ console.error('[Barrault] Erreur de sauvegarde Firestore :', e.code, e.message); }
+    }
+
+    async function startApp(){
+      await loadDataFromFirestore();
+      showSection('aujourdhui');
+      renderRdv();
+      renderClients();
+      renderProgrammes();
+      updateStats();
+      renderDashboard();
+    }
+
+    startApp();
+
+    // === GESTION DES DONNÃ‰ES ===
+    let data = {
+      clients: [
+        {id:'c1',prenom:'L&eacute;a',nom:'Martin',email:'lea.martin@email.com',tel:'06 12 34 56 78',adresse:'12 rue Alsace Lorraine, 31000 Toulouse',pack:'Coaching individuel',seances:8,objectifs:'Conditionnement g&eacute;n&eacute;ral, boxe technique',dateInscription:'2026-08-15',fiche:{}},
+        {id:'c2',prenom:'Thomas',nom:'Bernard',email:'thomas.b@email.com',tel:'06 98 76 54 32',adresse:'6 avenue Jean Jaur&egrave;s, 31600 Muret',pack:'Boxe technique',seances:2,objectifs:'Am&eacute;lioration technique, pr&eacute;paration comp&eacute;tition',dateInscription:'2026-07-20',fiche:{}},
+        {id:'c3',prenom:'Sophie',nom:'Dubois',email:'sophie.d@email.com',tel:'06 11 22 33 44',adresse:'25 boulevard de Strasbourg, 31000 Toulouse',pack:'Hyrox',seances:12,objectifs:'Pr&eacute;paration Hyrox, endurance & force',dateInscription:'2026-09-01',fiche:{}}
+      ],
+      rendezvous: [
+        {id:'r1',clientId:'c1',date:'2026-09-07',time:'09:00',duree:'1 h',type:'Coaching individuel',lieu:'12 rue Alsace Lorraine, 31000 Toulouse',notes:'S&eacute;ance technique'},
+        {id:'r2',clientId:'c1',date:'2026-09-07',time:'12:50',duree:'1 h',type:'Coaching individuel',lieu:'12 rue Alsace Lorraine, 31000 Toulouse',notes:''},
+        {id:'r3',clientId:'c2',date:'2026-09-08',time:'08:11',duree:'1 h 30',type:'Boxe technique',lieu:'6 avenue Jean Jaur&egrave;s, 31600 Muret',notes:'Sparring l&eacute;ger'}
+      ],
+      programmes: [
+        {id:'p1',nom:'Coaching individuel',description:'Programme personnalis&eacute; adapt&eacute; aux objectifs de chaque pratiquant, avec suivi r&eacute;gulier et ajustements.',duree:'&Agrave; la carte',tags:['personnalis&eacute;','suivi','adaptable']},
+        {id:'p2',nom:'Boxe technique',description:'Travail technique approfondi : gardes, d&eacute;placements, combinaisons, d&eacute;fense et strat&eacute;gie de combat.',duree:'8 semaines',tags:['boxe','technique','combat']}
+      ]
     };
 
 
@@ -534,7 +489,7 @@
     function getClientById(id){return data.clients.find(c=>c.id===id)||{prenom:'?',nom:'?',adresse:''};}
     function getInitials(prenom,nom){return (prenom[0]||'')+(nom[0]||'').toUpperCase();}
 
-    // === ICÔ¬NES SVG ===
+    // === ICÃ”Â¬NES SVG ===
     const mapsIcon = `<svg viewBox="0 0 48 48" style="width:24px;height:24px"><path fill="#34A853" d="M24 4C17.4 4 12 9.4 12 16c0 9 12 28 12 28s12-19 12-28c0-6.6-5.4-12-12-12Z"/><path fill="#4285F4" d="M24 4c6.6 0 12 5.4 12 12 0 4.4-2.9 10.9-6 16.2V16c0-3.3-2.7-6-6-6V4Z"/><path fill="#FBBC04" d="M24 4v6c-3.3 0-6 2.7-6 6v16.2c-3.1-5.3-6-11.8-6-16.2 0-6.6 5.4-12 12-12Z"/><circle cx="24" cy="16" r="5.5" fill="#fff"/><circle cx="24" cy="16" r="2.6" fill="#4285F4"/></svg>`;
     const wazeIcon = `<svg viewBox="0 0 48 48" style="width:24px;height:24px"><path fill="#33CCFF" d="M24 8c-8.8 0-16 6.4-16 14.4 0 4.4 2.1 8.3 5.5 11-.2 1.7-.8 3.3-1.9 4.7-.5.7.1 1.6 1 1.4 3-.7 5.7-2 7.9-3.8 1.2.3 2.4.5 3.6.5h.9c7.9-.4 14-6.6 14-14.3C39 14.4 32.8 8 24 8Z"/><path fill="#fff" d="M19 22.5a2.5 2.5 0 1 0 .001-5.001A2.5 2.5 0 0 0 19 22.5Zm10 0a2.5 2.5 0 1 0 .001-5.001A2.5 2.5 0 0 0 29 22.5Zm-2 6.2c-1.9 1.5-4.1 1.5-6 0-.5-.4-1.2-.3-1.6.2-.4.5-.3 1.2.2 1.6 2.8 2.2 6 2.2 8.8 0 .5-.4.6-1.1.2-1.6-.4-.5-1.1-.6-1.6-.2Z"/><circle cx="14.5" cy="35.5" r="2.5" fill="#fff"/><circle cx="22.5" cy="38.5" r="2.5" fill="#fff"/></svg>`;
     const callIcon = `<svg viewBox="0 0 48 48" style="width:24px;height:24px"><circle cx="24" cy="24" r="24" fill="#22c55e"/><path fill="#fff" d="M17.4 14.2c.6-.6 1.6-.6 2.2 0l3 3c.5.5.6 1.3.3 1.9l-1.6 3c-.2.4-.1.8.2 1.1l4.2 4.2c.3.3.7.4 1.1.2l3-1.6c.6-.3 1.4-.2 1.9.3l3 3c.6.6.6 1.6 0 2.2l-2 2c-1 1-2.5 1.4-3.9 1-5.6-1.6-10.5-4.9-14-9.4l-.1-.1c-3.3-4.2-5.4-9.2-6-14.4-.2-1.3.3-2.6 1.2-3.5Z"/></svg>`;
@@ -580,27 +535,27 @@
           dayHeaderHtml = `<div class="rdv-day-header ${isToday?'is-today':''}"><span class="rdv-day-label">${dayHeaderLabel(r.date)}</span><span class="rdv-day-count">${countSameDay} rendez-vous</span></div>`;
         }
         return `${dayHeaderHtml}<article class="appointment" data-id="${r.id}">
-          <div class="status-check btn-toggle-done" title="Marquer comme terminé (archiver)">
+          <div class="status-check btn-toggle-done" title="Marquer comme terminÃ© (archiver)">
             <span class="check-circle"><svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7" stroke="#fff" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
             <span>&Agrave; venir</span>
           </div>
           <button class="kebab-btn btn-kebab-rdv" title="Options" aria-label="Options"><svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><circle cx="12" cy="5" r="1.8" fill="currentColor"/><circle cx="12" cy="12" r="1.8" fill="currentColor"/><circle cx="12" cy="19" r="1.8" fill="currentColor"/></svg></button>
           <div class="kebab-menu">
             <button class="btn-edit-rdv">Modifier</button>
-            <button class="btn-seance-rdv">${hasSeance?'Voir la séance':'Ajouter une séance'}</button>
+            <button class="btn-seance-rdv">${hasSeance?'Voir la sÃ©ance':'Ajouter une sÃ©ance'}</button>
             <button class="kebab-delete btn-delete-rdv">Supprimer</button>
           </div>
           <div class="time">${r.time}</div>
           <div>
             <h3>${client.prenom} ${client.nom}</h3>
-            <p class="meta">${r.time} · ${r.duree} · ${r.type}</p>
+            <p class="meta">${r.time} Â· ${r.duree} Â· ${r.type}</p>
             <p class="location">${r.lieu}</p>
             ${r.notes?`<p style="margin:8px 0 0;font-size:13px;color:#6b7280">${r.notes}</p>`:''}
           </div>
           <div class="appointment-actions">
             <a class="chip logo-chip maps-chip" href="${mapUrl}" target="_blank" rel="noopener" title="Ouvrir dans Google Maps">${mapsIcon}</a>
             <a class="chip logo-chip waze-chip" href="${wazeUrl}" target="_blank" rel="noopener" title="Ouvrir dans Waze">${wazeIcon}</a>
-            ${cleanTel?`<a class="chip logo-chip call-chip" href="tel:${cleanTel}" title="Appeler ${client.prenom}">${callIcon}</a><a class="chip logo-chip sms-chip" href="sms:${cleanTel}" title="Envoyer un message à ${client.prenom}">${smsIcon}</a>`:''}
+            ${cleanTel?`<a class="chip logo-chip call-chip" href="tel:${cleanTel}" title="Appeler ${client.prenom}">${callIcon}</a><a class="chip logo-chip sms-chip" href="sms:${cleanTel}" title="Envoyer un message Ã  ${client.prenom}">${smsIcon}</a>`:''}
           </div>
         </article>`;
       }).join('');
@@ -637,7 +592,7 @@
           </div>
           <div style="display:flex;gap:8px;margin-top:8px;flex-wrap:wrap">
             <button class="chip btn-view-client">Voir d&eacute;tail</button>
-            <button class="chip ${ficheComplete?'success-chip':''}" btn-fiche-client>${ficheComplete?'Fiche ✓':'Fiche'}</button>
+            <button class="chip ${ficheComplete?'success-chip':''}" btn-fiche-client>${ficheComplete?'Fiche âœ“':'Fiche'}</button>
             <button class="chip btn-edit-client">Modifier</button>
             <button class="chip btn-history-client">Historique</button>
             <button class="chip btn-programme-client">Programme</button>
@@ -1542,7 +1497,7 @@
       closeProgrammeSeanceModal();
     });
 
-    // === DÉ‚TAIL CLIENT ===
+    // === DÃ‰â€šTAIL CLIENT ===
     const modalDetailClient = document.getElementById('modal-detail-client');
     let viewingClientId = null;
 
@@ -1561,13 +1516,13 @@
             <div class="client-avatar" style="width:64px;height:64px;font-size:24px">${getInitials(client.prenom,client.nom)}</div>
             <div>
               <p style="margin:0;font-size:14px;color:var(--muted)">${client.pack}</p>
-              <p style="margin:4px 0 0;font-size:13px;color:var(--muted)">${client.email||'–'} · ${client.tel||'–'}</p>
+              <p style="margin:4px 0 0;font-size:13px;color:var(--muted)">${client.email||'â€“'} Â· ${client.tel||'â€“'}</p>
             </div>
           </div>
           <div style="display:grid;gap:8px;padding:16px;background:var(--surface-soft);border-radius:16px">
-            <div class="info-row"><span class="info-label">Email</span><span class="info-value">${client.email||'–'}</span></div>
-            <div class="info-row"><span class="info-label">T&eacute;l&eacute;phone</span><span class="info-value">${client.tel||'–'}</span></div>
-            <div class="info-row"><span class="info-label">Adresse</span><span class="info-value">${client.adresse||'–'}</span></div>
+            <div class="info-row"><span class="info-label">Email</span><span class="info-value">${client.email||'â€“'}</span></div>
+            <div class="info-row"><span class="info-label">T&eacute;l&eacute;phone</span><span class="info-value">${client.tel||'â€“'}</span></div>
+            <div class="info-row"><span class="info-label">Adresse</span><span class="info-value">${client.adresse||'â€“'}</span></div>
             ${client.adresse?`<div style="display:flex;gap:8px;margin-top:8px"><a class="chip logo-chip maps-chip" href="${mapUrl}" target="_blank" rel="noopener">${mapsIcon}</a><a class="chip logo-chip waze-chip" href="${wazeUrl}" target="_blank" rel="noopener">${wazeIcon}</a></div>`:''}
           </div>
           <div style="display:grid;gap:8px;padding:16px;background:var(--surface-soft);border-radius:16px">
@@ -1624,15 +1579,15 @@
       const body = document.getElementById('fiche-client-body');
       document.getElementById('fiche-client-title').textContent = `Fiche d'information - ${client.prenom} ${client.nom}`;
       
-      const val = (key, empty='–') => f[key]||empty;
+      const val = (key, empty='â€“') => f[key]||empty;
       
       body.innerHTML = `
         <div class="fiche-section-title">Informations personnelles</div>
         <div class="fiche-grid">
           <div class="fiche-info"><label>Date de naissance</label><div class="value">${val('dateNaissance')}</div></div>
           <div class="fiche-info"><label>Sexe</label><div class="value">${val('sexe')}</div></div>
-          <div class="fiche-info"><label>Taille</label><div class="value">${val('taille')?val('taille')+' cm':'–'}</div></div>
-          <div class="fiche-info"><label>Poids</label><div class="value">${val('poids')?val('poids')+' kg':'–'}</div></div>
+          <div class="fiche-info"><label>Taille</label><div class="value">${val('taille')?val('taille')+' cm':'â€“'}</div></div>
+          <div class="fiche-info"><label>Poids</label><div class="value">${val('poids')?val('poids')+' kg':'â€“'}</div></div>
           <div class="fiche-info"><label>Profession</label><div class="value">${val('profession')}</div></div>
           <div class="fiche-info"><label>Situation</label><div class="value">${val('situation')}</div></div>
         </div>
@@ -1694,7 +1649,7 @@
       openEditFicheModal(viewingFicheClientId);
     });
 
-    // Modal Édition Fiche
+    // Modal Ã‰dition Fiche
     function openEditFicheModal(clientId){
       const client = data.clients.find(c=>c.id===clientId);
       if(!client)return;
@@ -1777,7 +1732,7 @@
       openFicheModal(clientId);
     });
 
-    // === É‚VÉ¬NEMENTS GLOBAUX ===
+    // === Ã‰â€šVÃ‰Â¬NEMENTS GLOBAUX ===
     document.getElementById('search-rdv').addEventListener('input', e=>renderRdv(e.target.value));
     document.getElementById('search-client').addEventListener('input', e=>renderClients(e.target.value));
 
