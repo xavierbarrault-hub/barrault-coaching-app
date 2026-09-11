@@ -89,6 +89,15 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 </head>
 <body>
+  <div id="login-screen" style="position:fixed;inset:0;background:#0f172a;display:flex;align-items:center;justify-content:center;z-index:5000;">
+  <div style="background:#fff;border-radius:24px;padding:40px;text-align:center;max-width:360px;">
+    <div style="font-size:22px;font-weight:700;margin-bottom:8px;">Barrault Coaching</div>
+    <p style="color:#6b7280;margin-bottom:24px;">Connecte-toi pour accéder à tes données, sur tous tes appareils.</p>
+    <button id="btn-google-login" style="width:100%;padding:14px;border-radius:999px;border:1px solid #ddd;background:#fff;font-weight:600;cursor:pointer;">
+      Se connecter avec Google
+    </button>
+  </div>
+</div>
   <div class="app-shell">
     <header class="topbar"><div class="brand"><div class="logo" aria-hidden="true">BC</div><div class="brand-copy"><strong>Barrault Coaching</strong><small>Coaching sportif · Espace coach</small></div></div><div class="coach-pill">Interface coach premium</div></header>
     <div class="quick-nav-wrap"><nav class="quick-nav" aria-label="Navigation rapide"><a class="quick-link active" data-section="aujourdhui">Aujourd'hui</a><a class="quick-link" data-section="rendezvous">Rendez-vous</a><a class="quick-link" data-section="clients">Clients</a><a class="quick-link" data-section="programmes">Programmes</a></nav></div>
