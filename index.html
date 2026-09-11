@@ -508,29 +508,6 @@
   document.querySelectorAll('.quick-link, .side-link').forEach(link=>{
     link.addEventListener('click', ()=>showSection(link.dataset.section));
   });
-
-  // === LE RESTE DE VOTRE CODE JS EXISTANT COMMENCE ICI ===
-  // (Gardez toutes vos fonctions : genId, formatDate, getClientById, getInitials,
-  // les icônes SVG, renderRdv, renderClients, renderProgrammes, updateStats,
-  // renderDashboard, tous vos écouteurs d'événements, etc. — NE LES SUPPRIMEZ PAS)
-</script>
-
-    // === GESTION DES DONNÉES ===
-    let data = {
-      clients: [
-        {id:'c1',prenom:'L&eacute;a',nom:'Martin',email:'lea.martin@email.com',tel:'06 12 34 56 78',adresse:'12 rue Alsace Lorraine, 31000 Toulouse',pack:'Coaching individuel',seances:8,objectifs:'Conditionnement g&eacute;n&eacute;ral, boxe technique',dateInscription:'2026-08-15',fiche:{}},
-        {id:'c2',prenom:'Thomas',nom:'Bernard',email:'thomas.b@email.com',tel:'06 98 76 54 32',adresse:'6 avenue Jean Jaur&egrave;s, 31600 Muret',pack:'Boxe technique',seances:2,objectifs:'Am&eacute;lioration technique, pr&eacute;paration comp&eacute;tition',dateInscription:'2026-07-20',fiche:{}},
-        {id:'c3',prenom:'Sophie',nom:'Dubois',email:'sophie.d@email.com',tel:'06 11 22 33 44',adresse:'25 boulevard de Strasbourg, 31000 Toulouse',pack:'Hyrox',seances:12,objectifs:'Pr&eacute;paration Hyrox, endurance & force',dateInscription:'2026-09-01',fiche:{}}
-      ],
-      rendezvous: [
-        {id:'r1',clientId:'c1',date:'2026-09-07',time:'09:00',duree:'1 h',type:'Coaching individuel',lieu:'12 rue Alsace Lorraine, 31000 Toulouse',notes:'S&eacute;ance technique'},
-        {id:'r2',clientId:'c1',date:'2026-09-07',time:'12:50',duree:'1 h',type:'Coaching individuel',lieu:'12 rue Alsace Lorraine, 31000 Toulouse',notes:''},
-        {id:'r3',clientId:'c2',date:'2026-09-08',time:'08:11',duree:'1 h 30',type:'Boxe technique',lieu:'6 avenue Jean Jaur&egrave;s, 31600 Muret',notes:'Sparring l&eacute;ger'}
-      ],
-      programmes: [
-        {id:'p1',nom:'Coaching individuel',description:'Programme personnalis&eacute; adapt&eacute; aux objectifs de chaque pratiquant, avec suivi r&eacute;gulier et ajustements.',duree:'&Agrave; la carte',tags:['personnalis&eacute;','suivi','adaptable']},
-        {id:'p2',nom:'Boxe technique',description:'Travail technique approfondi : gardes, d&eacute;placements, combinaisons, d&eacute;fense et strat&eacute;gie de combat.',duree:'8 semaines',tags:['boxe','technique','combat']}
-      ]
     };
 
 
