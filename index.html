@@ -89,7 +89,20 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 </head>
 <body>
-  <div class="app-shell">
+<div id="login-screen" style="position:fixed;inset:0;z-index:5000;display:flex;alig
+<div style="background:#fff;border-radius:24px;box-shadow:0 20px 60px rgba(15,23
+<div style="width:64px;height:64px;border-radius:18px;background:linear-gradien
+<h2 style="margin:0 0 6px;font-size:22px;letter-spacing:-.03em;">Barrault Coach
+<p id="login-status-text" style="margin:0 0 26px;color:#6b7280;font-size:14px;"
+<button id="btn-login-google" type="button" style="width:100%;display:flex;alig
+<svg width="20" height="20" viewBox="0 0 48 48"><path fill="#FFC107" d="M43.6
+Se connecter avec Google
+</button>
+<div id="login-loading" style="display:none;margin-top:18px;color:#6b7280;font-
+<div id="login-error" style="display:none;margin-top:16px;padding:12px 14px;bor
+</div>
+</div>
+<div class="app-shell" id="app-shell" style="display:none;">
     <header class="topbar"><div class="brand"><div class="logo" aria-hidden="true">BC</div><div class="brand-copy"><strong>Barrault Coaching</strong><small>Coaching sportif · Espace coach</small></div></div><div class="coach-pill">Interface coach premium</div></header>
     <div class="quick-nav-wrap"><nav class="quick-nav" aria-label="Navigation rapide"><a class="quick-link active" data-section="aujourdhui">Aujourd'hui</a><a class="quick-link" data-section="rendezvous">Rendez-vous</a><a class="quick-link" data-section="clients">Clients</a><a class="quick-link" data-section="programmes">Programmes</a></nav></div>
     <div class="grid">
@@ -407,45 +420,80 @@
   </div>
 
   <script type="module">
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-    import { getFirestore, doc, getDoc, setDoc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebas
+import { getAuth, GoogleAuthProvider, signInWithPopup, onAuthStateChanged, signOu
+import { getFirestore, doc, getDoc, setDoc } from "https://www.gstatic.com/fireba
+const firebaseConfig = {
+apiKey: "AIzaSyCr6qVlCSuJLH4_8UVIFauT0Nb1Ywbb84o",
+authDomain: "barrault-coaching.firebaseapp.com",
+projectId: "barrault-coaching",
+storageBucket: "barrault-coaching.firebasestorage.app",
+messagingSenderId: "996102278981",
+appId: "1:996102278981:web:a03d85d0b18da4ff9a782c",
+measurementId: "G-8YMHJZ8K02"
+};
+const ALLOWED_EMAIL = "xavier.barrault@gmail.com";
+const firebaseApp = initializeApp(firebaseConfig);
+const auth = getAuth(firebaseApp);
+const googleProvider = new GoogleAuthProvider();
+const db = getFirestore(firebaseApp);
+const SHARED_DOC_REF = doc(db, 'app', 'shared-data');
+async function loadDataFromFirestore(){
+try{
+const snap = await getDoc(SHARED_DOC_REF);
+if(snap.exists()){ data = snap.data(); } else { await saveData(); }
+}catch(e){ console.error('[Barrault] Erreur de chargement Firestore :', e.code
+}
+async function saveData(){
+try{ await setDoc(SHARED_DOC_REF, data); }catch(e){ console.error('[Barrault] E
+}
+async function startApp(){
+await loadDataFromFirestore();
+showSection('aujourdhui');
+renderRdv();
+renderClients();
+renderProgrammes();
+updateStats();
+renderDashboard();
+}
+function showLoginError(message){
+const errorEl = document.getElementById('login-error');
+errorEl.textContent = message;
+errorEl.style.display = 'block';
+document.getElementById('login-loading').style.display = 'none';
+document.getElementById('btn-login-google').style.display = 'flex';
+}
+document.getElementById('btn-login-google').addEventListener('click', async () =>
+document.getElementById('login-error').style.display = 'none';
+try{
+await signInWithPopup(auth, googleProvider);
+}catch(e){
+showLoginError('Erreur de connexion : ' + (e.message || e.code || 'inconnue')
+}
+});
+onAuthStateChanged(auth, async (user) => {
+const loginScreen = document.getElementById('login-screen');
+const appShell = document.getElementById('app-shell');
+const loginBtn = document.getElementById('btn-login-google');
+const loadingEl = document.getElementById('login-loading');
+if(user && user.email === ALLOWED_EMAIL){
+loginBtn.style.display = 'none';
+loadingEl.style.display = 'block';
+document.getElementById('login-error').style.display = 'none';
+loginScreen.style.display = 'none';
+appShell.style.display = 'block';
+await startApp();
+} else if(user && user.email !== ALLOWED_EMAIL){
+await signOut(auth);
+showLoginError("Accès non autorisé pour cet e-mail.");
+} else {
+appShell.style.display = 'none';
+loginScreen.style.display = 'flex';
+loginBtn.style.display = 'flex';
+loadingEl.style.display = 'none';
+}
+});
 
-    const firebaseConfig = {
-      apiKey: "AIzaSyCr6qVlCSuJLH4_8UVIFauT0Nb1Ywbb84o",
-      authDomain: "barrault-coaching.firebaseapp.com",
-      projectId: "barrault-coaching",
-      storageBucket: "barrault-coaching.firebasestorage.app",
-      messagingSenderId: "996102278981",
-      appId: "1:996102278981:web:a03d85d0b18da4ff9a782c",
-      measurementId: "G-8YMHJZ8K02"
-    };
-
-    const firebaseApp = initializeApp(firebaseConfig);
-    const db = getFirestore(firebaseApp);
-    const SHARED_DOC_REF = doc(db, 'app', 'shared-data');
-
-    async function loadDataFromFirestore(){
-      try{
-        const snap = await getDoc(SHARED_DOC_REF);
-        if(snap.exists()){ data = snap.data(); } else { await saveData(); }
-      }catch(e){ console.error('[Barrault] Erreur de chargement Firestore :', e.code, e.message); }
-    }
-
-    async function saveData(){
-      try{ await setDoc(SHARED_DOC_REF, data); }catch(e){ console.error('[Barrault] Erreur de sauvegarde Firestore :', e.code, e.message); }
-    }
-
-    async function startApp(){
-      await loadDataFromFirestore();
-      showSection('aujourdhui');
-      renderRdv();
-      renderClients();
-      renderProgrammes();
-      updateStats();
-      renderDashboard();
-    }
-
-    startApp();
 
     // === GESTION DES DONNÉES ===
     let data = {
