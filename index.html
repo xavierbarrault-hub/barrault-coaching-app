@@ -443,6 +443,83 @@
   const auth = getAuth(firebaseApp);
   const provider = new GoogleAuthProvider();
 
+  // Seul ce compte Google peut accéder à l'app
+  const EMAILS_AUTORISES = ["xavier.barrault@gmail.com"];
+
+  // MODIFICATION CLÉ : pointe vers le MÊME document que la version Netlify
+  // -> tes vraies données (clients, rdv, séances) sont directement visibles ici,
+  // sans migration ni duplication.
+  const SHARED_DOC_REF = doc(db, "app", "shared-data");
+
+  setPersistence(auth, browserLocalPersistence);
+
+  window.__loginGoogle = async function () {
+    try {
+      const result = await signInWithPopup(auth, provider);
+      const email = result.user.email;
+      if (!EMAILS_AUTORISES.includes(email)) {
+        alert("Accès refusé : ce compte Google n'est pas autorisé.");
+        await signOut(auth);
+      }
+    } catch (err) {
+      console.error("Erreur de connexion Google :", err);
+      alert("Connexion impossible. Réessaie.");
+    }
+  };
+
+  window.__logout = function () {
+    signOut(auth);
+  };
+
+  async function loadDataFromFirestore() {
+    try {
+      const snap = await getDoc(SHARED_DOC_REF);
+      if (snap.exists()) {
+        data = snap.data();
+      } else {
+        await saveData();
+      }
+    } catch (e) {
+      console.error("[Barrault] Erreur de chargement Firestore :", e.code, e.message);
+    }
+  }
+
+  async function saveData() {
+    try {
+      await setDoc(SHARED_DOC_REF, data);
+    } catch (e) {
+      console.error("[Barrault] Erreur de sauvegarde Firestore :", e.code, e.message);
+    }
+  }
+  window.saveData = saveData;
+
+  async function startApp() {
+    await loadDataFromFirestore();
+    showSection('aujourdhui');
+    renderRdv();
+    renderClients();
+    renderProgrammes();
+    updateStats();
+    renderDashboard();
+  }
+
+  onAuthStateChanged(auth, async (user) => {
+    const loginScreen = document.getElementById("login-screen");
+    const appShell = document.querySelector(".app-shell");
+
+    if (user && EMAILS_AUTORISES.includes(user.email)) {
+      if (loginScreen) loginScreen.style.display = "none";
+      if (appShell) appShell.style.display = "";
+      const pill = document.getElementById("coach-user-email");
+      if (pill) pill.textContent = user.email;
+      await startApp();
+    } else {
+      if (loginScreen) loginScreen.style.display = "flex";
+      if (appShell) appShell.style.display = "none";
+    }
+  });
+</script>
+
     // === GESTION DES DONNÉES ===
     let data = {
       clients: [
