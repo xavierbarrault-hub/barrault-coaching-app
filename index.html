@@ -450,7 +450,7 @@
   // MODIFICATION CLÉ : pointe vers le MÊME document que la version Netlify
   // -> tes vraies données (clients, rdv, séances) sont directement visibles ici,
   // sans migration ni duplication.
-  const SHARED_DOC_REF = doc(db, "app", "shared-data");
+  const SHARED_DOC_REF = doc(db, "users", "data");
 
   setPersistence(auth, browserLocalPersistence);
 
